@@ -5,14 +5,18 @@ from sys import argv
 im = cv2.imread(argv[1])
 cv2.imshow("original", im)
 
+# Fuzzing to denoise
+fuzzed = cv2.bilateralFilter(im, 9, 75, 75)
+cv2.imshow("fuzzed", fuzzed)
+
 # BGR filtering, might not work as well for actual pictures in actual lighting conditions
-lower_bounds = (0, 200, 0)
-upper_bounds = (50, 255, 50)
-binary = cv2.inRange(im, lower_bounds, upper_bounds)
+lower_bounds = (0, 0, 120)
+upper_bounds = (75, 100, 255)
+binary = cv2.inRange(fuzzed, lower_bounds, upper_bounds)
 cv2.imshow("binary", binary)
 
 # Edge detection
-edged = cv2.Canny(binary, 30, 200)
+edged = cv2.Canny(binary, 0, 1)
 cv2.imshow("edged", edged)
 
 # Locate contours and extract those with 4 vertices
@@ -22,10 +26,9 @@ rect_cnt = None
 for c in cnts:
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, 0.02 * peri, True)
- 
+
     if len(approx) == 4:
         rect_cnt = approx
-        cv2.drawContours(im, [approx], -1, (255, 0, 0), 1)
         break
 cv2.imshow("with rectangle", im)
 
@@ -62,7 +65,11 @@ dst = np.array(
 
 # Warp the image to un-perspective-ify the rectangle
 M = cv2.getPerspectiveTransform(rect, dst)
-warp = cv2.warpPerspective(im, M, (width, height))
+warp = cv2.warpPerspective(binary, M, (width, height))
 cv2.imshow("warped", warp)
+
+# Resize to match standard size
+resized = cv2.resize(warp, (8, 8))
+cv2.imshow("resized", resized)
 
 cv2.waitKey()
