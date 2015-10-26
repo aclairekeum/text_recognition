@@ -1,19 +1,25 @@
 import cv2
 import numpy as np
 from sys import argv
+from sklearn.externals import joblib
 
+def invertImg(imagem):
+    imagem = (255-imagem)
+    return imagem
+
+# Read an image file in images folder.
 im = cv2.imread(argv[1])
 cv2.imshow("original", im)
 
 # Fuzzing to denoise
 fuzzed = cv2.bilateralFilter(im, 9, 75, 75)
-cv2.imshow("fuzzed", fuzzed)
+grayOrig = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 # BGR filtering, might not work as well for actual pictures in actual lighting conditions
-lower_bounds = (0, 0, 120)
-upper_bounds = (75, 100, 255)
+lower_bounds = (0, 0, 49)
+upper_bounds = (113, 69, 255)
 binary = cv2.inRange(fuzzed, lower_bounds, upper_bounds)
-cv2.imshow("binary", binary)
+# cv2.imshow("binary", binary)
 
 # Edge detection
 edged = cv2.Canny(binary, 0, 1)
@@ -26,9 +32,10 @@ rect_cnt = None
 for c in cnts:
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, 0.02 * peri, True)
-
-    if len(approx) == 4:
+    
+    if len(approx) == 4 and peri>300:
         rect_cnt = approx
+        print peri
         break
 cv2.imshow("with rectangle", im)
 
@@ -65,11 +72,26 @@ dst = np.array(
 
 # Warp the image to un-perspective-ify the rectangle
 M = cv2.getPerspectiveTransform(rect, dst)
-warp = cv2.warpPerspective(binary, M, (width, height))
+warp = cv2.warpPerspective(grayOrig, M, (width, height))
 cv2.imshow("warped", warp)
 
-# Resize to match standard size
-resized = cv2.resize(warp, (8, 8))
-cv2.imshow("resized", resized)
+height, length = warp.shape
+crop= warp[height*0.05:height*(1-0.05),length*0.05:length*(1-0.05)]
+cv2.imshow("threshold",crop)
 
+inverted = invertImg(crop)
+cv2.imshow("inverted", inverted)
+
+ret, inverted = cv2.threshold(inverted,200,255, cv2.THRESH_TOZERO)
+cv2.imshow("afterthres", inverted)
+# cv2.imwrite("five.png", inverted)
+# Resize to match standard size
+resized = cv2.resize(inverted, (8, 8))
+
+model = joblib.load('model/model.pkl')
+data = resized.reshape((1,64))/16
+
+print model.predict(data)
 cv2.waitKey()
+
+
