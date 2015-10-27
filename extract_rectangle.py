@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from sys import argv
 from sklearn.externals import joblib
-import time
+
 # Much of the rectangle extraction is taken from here:
 # http://www.pyimagesearch.com/2014/04/21/building-pokedex-python-finding-game-boy-screen-step-4-6/
 
@@ -17,10 +17,10 @@ im = cv2.imread(argv[1])
 gray_orig = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 # Fuzzing to denoise
-fuzzed = cv2.bilateralFilter(im, 9, 75, 75)
+fuzzed = cv2.bilateralFilter(gray_orig, 9, 75, 75)
 
 # Edge detection
-edged = cv2.Canny(gray_orig, 0, 1)
+edged = cv2.Canny(fuzzed, 0, 1)
 cv2.imshow("edged", edged)
 
 # Locate contours and extract those with 4 vertices
@@ -42,12 +42,11 @@ for c in cnts:
         try:
             rect[:2] = sorted([pt for pt in pts if pt[1] < center[1]], key = lambda p: p[0])
             rect[2:] = sorted([pt for pt in pts if pt[1] >= center[1]], key = lambda p: p[0], reverse = True)
-
-        except: 
+        except:
             print "corner order didn't work"
             continue
 
-        # Calculate size of result, might be able to use this in the filtering of rectangles (by using a known h/w ratio)
+        # Calculate dimensions
         tl, tr, br, bl = rect
         width = int(max(
             np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2)),
@@ -66,14 +65,15 @@ for c in cnts:
             ],
             dtype = "float32"
         )
-        print "width = ", width, "height = ",height
-        #See if the rectangle is square. Gave a tolerance of 30% of the max for each sides.
-        #Then draw contours, pass it to the next step. 
-        if abs(width-height)<0.3*max(width, height):
+
+        # See if the rectangle is square. Gave a tolerance of 30% of the max for each sides.
+        # Then draw contour, pass it to the next step. 
+        if abs(width - height) < 0.3 * max(width, height):
             rect_cnt = approx
             cv2.drawContours(im, [rect_cnt], -1, (0, 255, 0), 3)
             break
-# if no square found, exit
+
+# If no square was found, exit
 if rect_cnt is None:
     print "no square contour found"
     exit(0)
@@ -110,4 +110,4 @@ data = resized.reshape((1,64)) / 16.0 # Divide by 16 and round to integers to ma
 data.round()
 print model.predict(data)
 
-# cv2.waitKey()
+cv2.waitKey()
