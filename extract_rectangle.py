@@ -17,10 +17,10 @@ im = cv2.imread(argv[1])
 gray_orig = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 # Fuzzing to denoise
-fuzzed = cv2.bilateralFilter(im, 9, 75, 75)
+fuzzed = cv2.bilateralFilter(gray_orig, 9, 75, 75)
 
 # Edge detection
-edged = cv2.Canny(gray_orig, 0, 1)
+edged = cv2.Canny(fuzzed, 0, 1)
 cv2.imshow("edged", edged)
 
 # Locate contours and extract those with 4 vertices
@@ -110,4 +110,7 @@ data = resized.reshape((1,64)) / 16.0 # Divide by 16 and round to integers to ma
 data.round()
 print model.predict(data)
 
-# cv2.waitKey()
+cv2.waitKey()
+# 
+
+
