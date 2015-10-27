@@ -3,23 +3,28 @@ import numpy as np
 from sys import argv
 from sklearn.externals import joblib
 
+# Much of the rectangle extraction is taken from here:
+# http://www.pyimagesearch.com/2014/04/21/building-pokedex-python-finding-game-boy-screen-step-4-6/
+
 def invertImg(imagem):
     imagem = (255-imagem)
     return imagem
 
 # Read an image file in images folder.
 im = cv2.imread(argv[1])
-cv2.imshow("original", im)
+# cv2.imshow("original", im)
+
+# Save a grayscale copy of the original
+gray_orig = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 # Fuzzing to denoise
 fuzzed = cv2.bilateralFilter(im, 9, 75, 75)
-grayOrig = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
 
 # BGR filtering, might not work as well for actual pictures in actual lighting conditions
 lower_bounds = (0, 0, 49)
 upper_bounds = (113, 69, 255)
 binary = cv2.inRange(fuzzed, lower_bounds, upper_bounds)
-# cv2.imshow("binary", binary)
+cv2.imshow("binary", binary)
 
 # Edge detection
 edged = cv2.Canny(binary, 0, 1)
@@ -33,15 +38,16 @@ for c in cnts:
     peri = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, 0.02 * peri, True)
     
-    if len(approx) == 4 and peri>300:
+    # Check for four sides and a reasonably large perimeter
+    if len(approx) == 4 and peri > 300:
         rect_cnt = approx
-        print peri
+        cv2.drawContours(im, [rect_cnt], -1, (0, 255, 0), 3)
         break
-cv2.imshow("with rectangle", im)
 
 if rect_cnt is None:
-    print 'no rectangle contour found'
+    print "no rectangle contour found"
     exit(0)
+cv2.imshow("with rectangle", im)
 
 # Order vertices as top-left, top-right, bottom-right, bottom-left
 pts = rect_cnt.reshape(4, 2)
@@ -72,26 +78,33 @@ dst = np.array(
 
 # Warp the image to un-perspective-ify the rectangle
 M = cv2.getPerspectiveTransform(rect, dst)
-warp = cv2.warpPerspective(grayOrig, M, (width, height))
+warp = cv2.warpPerspective(gray_orig, M, (width, height))
 cv2.imshow("warped", warp)
 
-height, length = warp.shape
-crop= warp[height*0.05:height*(1-0.05),length*0.05:length*(1-0.05)]
-cv2.imshow("threshold",crop)
+# Crop out the border
+border_ratio = 0.05
+height, width = warp.shape
+h_border = height * border_ratio
+w_border = width * border_ratio
+crop = warp[h_border:height-h_border, w_border:width-w_border]
+cv2.imshow("cropped", crop)
 
+# Invert to match training data
 inverted = invertImg(crop)
 cv2.imshow("inverted", inverted)
 
-ret, inverted = cv2.threshold(inverted,200,255, cv2.THRESH_TOZERO)
-cv2.imshow("afterthres", inverted)
+# Drop the lower end to 0 (instead of a dark-ish gray)
+ret, thresholded = cv2.threshold(inverted,200,255, cv2.THRESH_TOZERO)
+cv2.imshow("thresholded", thresholded)
 # cv2.imwrite("five.png", inverted)
+
 # Resize to match standard size
-resized = cv2.resize(inverted, (8, 8))
+resized = cv2.resize(thresholded, (8, 8))
 
-model = joblib.load('model/model.pkl')
-data = resized.reshape((1,64))/16
-
+# Use model to predict the digit
+model = joblib.load("model/model.pkl")
+data = resized.reshape((1,64)) / 16.0 # Divide by 16 and round to integers to match training data
+data.round()
 print model.predict(data)
+
 cv2.waitKey()
-
-
