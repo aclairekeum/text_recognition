@@ -80,7 +80,7 @@ class DigitReader(object):
             # Then draw contour, pass it to the next step. 
             if abs(r_width - r_height) < 0.3 * max(r_width, r_height):
                 rect_cnt = approx
-                cv2.drawContours(gray_image, [rect_cnt], -1, (0, 255, 0), 3)
+                cv2.drawContours(gray_image, [rect_cnt], -1, 255, 3)
                 break
 
         cv2.imshow("video_window", gray_image)
