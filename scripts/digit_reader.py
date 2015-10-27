@@ -22,7 +22,7 @@ class DigitReader(object):
         self.model = joblib.load('model/model.pkl')
 
         cv2.namedWindow('video_window')
-        cv2.namedWindow('final')
+        # cv2.namedWindow('final')
 
         self.digit = -1
 
@@ -33,7 +33,6 @@ class DigitReader(object):
     def process_image(self, msg):
         """ Process image messages from ROS """
         gray_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
-        cv2.imshow('video_window', gray_image)
 
         # Fuzzing to de-noise and edge-detected
         fuzzed = cv2.bilateralFilter(gray_image, 9, 75, 75)
@@ -81,31 +80,28 @@ class DigitReader(object):
             # Then draw contour, pass it to the next step. 
             if abs(r_width - r_height) < 0.3 * max(r_width, r_height):
                 rect_cnt = approx
-                # cv2.drawContours(im, [rect_cnt], -1, (0, 255, 0), 3)
+                cv2.drawContours(gray_image, [rect_cnt], -1, (0, 255, 0), 3)
                 break
 
+        cv2.imshow("video_window", gray_image)
         # If no square was found, return
         if rect_cnt is None:
             return
-        # cv2.imshow("with square", im)
 
         # Warp the image to un-perspective-ify the square
         M = cv2.getPerspectiveTransform(rect, dst)
-        warp = cv2.warpPerspective(gray_image, M, dst.shape)
-        # cv2.imshow("warped", warp)
+        warp = cv2.warpPerspective(gray_image, M, (r_width, r_height))
 
         # Crop out the border
         border_ratio = 0.05
         height, width = warp.shape
         h_border = height * border_ratio
         w_border = width * border_ratio
-        crop = warp[h_border:height-h_border, w_border:width-w_border]
-        # cv2.imshow("cropped", crop)
+        cropped = warp[h_border:height-h_border, w_border:width-w_border]
 
         # Invert to match training data and drop the lower end to 0 (instead of a dark-ish gray)
-        inverted = 255 - crop
-        ret, thresholded = cv2.threshold(inverted, 150, 255, cv2.THRESH_TOZERO)
-        # cv2.imshow("inverted", inverted)
+        inverted = (255 - cropped)
+        ret, thresholded = cv2.threshold(inverted, 195, 255, cv2.THRESH_TOZERO)
         cv2.imshow("final", thresholded)
 
         # Resize to match standard size
@@ -116,16 +112,20 @@ class DigitReader(object):
         data.round()
         self.digit = self.model.predict(data)[0]
 
-        cv2.waitKey(2)
-
+        cv2.waitKey(1)
 
     def run(self):
         """ The main run loop, publish twist messages """
         r = rospy.Rate(5)
         my_twist = Twist()
         while not rospy.is_shutdown():
-            my_twist.angular.z = 0
             print self.digit
+            if self.digit == 4:
+                my_twist.angular.z = 0.1
+            elif self.digit == 0:
+                my_twist.angular.z = -0.1
+            else:
+                my_twist.angular.z = 0
             self.pub.publish(my_twist)
             r.sleep()
 
