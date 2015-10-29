@@ -25,6 +25,7 @@ class DigitReader(object):
         # cv2.namedWindow('final')
 
         self.digit = -1
+        self.digit_confidence = 0
 
         self.bridge = CvBridge()    # used to convert ROS messages to OpenCV
         rospy.Subscriber(image_topic, Image, self.process_image)
@@ -61,12 +62,11 @@ class DigitReader(object):
             tl, tr, br, bl = rect
             r_width = int(max(
                 np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2)),
-                np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-            ))
-            r_height = int(max( 
+                np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2)),
                 np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2)),
                 np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
             ))
+            r_height = r_width
             dst = np.array(
                 [
                     [0, 0],
@@ -111,6 +111,7 @@ class DigitReader(object):
         data = resized.reshape((1,64)) / 16.0 # Divide by 16 and round to integers to match training data
         data.round()
         self.digit = self.model.predict(data)[0]
+        self.digit_confidence = self.model.predict_proba(data).max()
 
         cv2.waitKey(1)
 
@@ -119,7 +120,7 @@ class DigitReader(object):
         r = rospy.Rate(5)
         my_twist = Twist()
         while not rospy.is_shutdown():
-            print self.digit
+            print self.digit, self.digit_confidence
             if self.digit == 4:
                 my_twist.angular.z = 0.1
             elif self.digit == 0:
