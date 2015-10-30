@@ -30,7 +30,7 @@ class DigitReader(object):
         self.min_digit_confidence = 0.5
 
         # We also use a sliding window and only accept the prediction when there is agreement
-        self.max_len = 10
+        self.max_len = 5
         self.last_digits = deque([-1], maxlen=self.max_len)
 
         # Subscribe to the image topic and create a cmd_vel publisher
@@ -118,8 +118,9 @@ class DigitReader(object):
         # Resize to match standard size
         resized = cv2.resize(thresholded, (8, 8))
 
-        # Use model to predict the digit
-        data = resized.reshape((1,64)) / 16.0 # Divide by 16 and round to integers to match training data
+        # Use model to evaluate the highest confidence in digit prediction
+        # Flatten image, divide by 16, and round to integers to match training data
+        data = resized.ravel() / 16.0
         data.round()
         self.digit_confidence = self.model.predict_proba(data).max()
 
@@ -140,11 +141,11 @@ class DigitReader(object):
         while not rospy.is_shutdown():
             # If the last N digits were the same, accept that digit as correct and act accordingly
             digit = self.last_digits[-1]
-            if self.last_digits.count(digit) == self.max_len:
+            if digit != -1 and self.last_digits.count(digit) == self.max_len:
                 print digit
-                if self.digit == 4:
+                if digit == 4:
                     my_twist.angular.z = 0.1
-                elif self.digit == 0:
+                elif digit == 0:
                     my_twist.angular.z = -0.1
                 else:
                     my_twist.angular.z = 0
