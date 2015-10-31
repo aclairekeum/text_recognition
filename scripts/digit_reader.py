@@ -46,10 +46,13 @@ class DigitReader(object):
         self.last_digits = deque([-1], maxlen=self.max_len)
 
         # Target angle, error from current angle, allowed error, and list of set points
-        self.target_angle = None
-        self.angle_error = None
-        self.max_error = 0.1
+        self.target_angle = 0
+        self.angle_error = 0
+        self.max_error = 0.075
         self.angles = [angle_normalize(-i*np.pi/5) for i in range(10)]
+
+        # Proportional control constant
+        self.k_p = 0.5
 
         # Flag so we can toggle between reading and turning
         self.is_turning = False
@@ -117,10 +120,6 @@ class DigitReader(object):
                 )
                 break
 
-        # Show the image; it will have a white contour drawn on it showing the extracted square
-        # (or not if no square was found)
-        cv2.imshow("stream", gray_image)
-
         # If no square was found, return
         if dst is None:
             return
@@ -139,7 +138,6 @@ class DigitReader(object):
         # Invert to match training data and drop the lower end to 0 (instead of a dark-ish gray)
         inverted = (255 - cropped)
         ret, thresholded = cv2.threshold(inverted, 195, 255, cv2.THRESH_TOZERO)
-        cv2.imshow("final", thresholded)
 
         # Resize to match standard size
         resized = cv2.resize(thresholded, (8, 8))
@@ -157,13 +155,20 @@ class DigitReader(object):
             digit = self.model.predict(data)[0]
         self.last_digits.append(digit)
 
+        # Show guess on the stream image ####untested
+        cv2.putText(gray_image, str(digit), (10,60), cv2.FONT_HERSHEY_SIMPLEX, 2, 0, 2)
+
         # Show the stream and final extracted images
+        # The stream will have a white contour drawn on it showing the extracted square
+        # (or not if no square was found) and the predicted digit in the top left corner
+        cv2.imshow("stream", gray_image)
+        cv2.imshow("final", thresholded)
         cv2.waitKey(1)
 
     def process_odom(self, msg):
         """ Process odometry messages to find error between current and target angles """
         current_angle = pose_to_yaw(msg.pose.pose)
-        self.angle_error = self.target_angle - current_angle
+        self.angle_error = angle_normalize(self.target_angle - current_angle)
 
     def run(self):
         """ The main run loop, publish twist messages """
@@ -173,16 +178,15 @@ class DigitReader(object):
             # If the last N digits were the same, accept that digit as correct and set target angle accordingly
             digit = self.last_digits[-1]
             if digit != -1 and self.last_digits.count(digit) == self.max_len:
-                print digit
                 self.target_angle = self.angles[digit]
 
             # Set turning flag and angular velocity based on error from target angle
-            if self.angle_error < self.max_error:
+            if abs(self.angle_error) < self.max_error:
                 self.is_turning = False
                 my_twist.angular.z = 0
             else:
                 self.is_turning = True
-                my_twist.angular.z = self.angle_error
+                my_twist.angular.z = self.k_p * self.angle_error
 
             self.pub.publish(my_twist)
             r.sleep()
