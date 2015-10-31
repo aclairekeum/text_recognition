@@ -26,8 +26,8 @@ def support_vector_machine():
     return GridSearchCV(SVC(C=1), tuned_parameters, cv=5, n_jobs=-1)
 
 def k_nearest_neighbors():
-    tuned_parameters = [{'weights': ['uniform'], 'n_neighbors': range(3,11)},
-                        {'weights': ['distance'], 'n_neighbors': range(3,11)}]
+    tuned_parameters = [{'weights': ['uniform'], 'n_neighbors': range(5,11)},
+                        {'weights': ['distance'], 'n_neighbors': range(5,11)}]
     return GridSearchCV(KNeighborsClassifier(), tuned_parameters, cv=5, n_jobs=-1)
 
 def random_forest():
@@ -41,7 +41,7 @@ def random_forest():
 
 # data = pickle.load(pkl_file)
 
-data = joblib.load("letter/letter.pkl")
+data = joblib.load("letter2/letter.pkl")
 print data[0].shape, data[1].shape
 X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], train_size=0.9)
 
