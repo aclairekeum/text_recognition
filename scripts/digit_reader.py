@@ -6,11 +6,23 @@
 import rospy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import Odometry
+from tf.transformations import euler_from_quaternion
 from cv_bridge import CvBridge
 import cv2
+import math
 import numpy as np
 from collections import deque
 from sklearn.externals import joblib
+
+def angle_normalize(z):
+    """ convenience function to map an angle to the range [-pi,pi] """
+    return math.atan2(math.sin(z), math.cos(z))
+
+def pose_to_yaw(p):
+    """ convenience function to extract yaw from a pose """
+    orientation_tuple = (p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)
+    return euler_from_quaternion(orientation_tuple)[2]
 
 class DigitReader(object):
     """ placeholder """
@@ -33,12 +45,26 @@ class DigitReader(object):
         self.max_len = 5
         self.last_digits = deque([-1], maxlen=self.max_len)
 
+        # Target angle, error from current angle, allowed error, and list of set points
+        self.target_angle = None
+        self.angle_error = None
+        self.max_error = 0.1
+        self.angles = [angle_normalize(-i*np.pi/5) for i in range(10)]
+
+        # Flag so we can toggle between reading and turning
+        self.is_turning = False
+
         # Subscribe to the image topic and create a cmd_vel publisher
         rospy.Subscriber(image_topic, Image, self.process_image)
+        rospy.Subscriber('/odom', Odometry, self.process_odom)
         self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def process_image(self, msg):
         """ Process image messages from ROS """
+        # Short circuit if we're turning right now
+        if self.is_turning:
+            return
+
         # Receive grayscale image
         gray_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
 
@@ -134,21 +160,30 @@ class DigitReader(object):
         # Show the stream and final extracted images
         cv2.waitKey(1)
 
+    def process_odom(self, msg):
+        """ Process odometry messages to find error between current and target angles """
+        current_angle = pose_to_yaw(msg.pose.pose)
+        self.angle_error = self.target_angle - current_angle
+
     def run(self):
         """ The main run loop, publish twist messages """
         r = rospy.Rate(5)
         my_twist = Twist()
         while not rospy.is_shutdown():
-            # If the last N digits were the same, accept that digit as correct and act accordingly
+            # If the last N digits were the same, accept that digit as correct and set target angle accordingly
             digit = self.last_digits[-1]
             if digit != -1 and self.last_digits.count(digit) == self.max_len:
                 print digit
-                if digit == 4:
-                    my_twist.angular.z = 0.1
-                elif digit == 0:
-                    my_twist.angular.z = -0.1
-                else:
-                    my_twist.angular.z = 0
+                self.target_angle = self.angles[digit]
+
+            # Set turning flag and angular velocity based on error from target angle
+            if self.angle_error < self.max_error:
+                self.is_turning = False
+                my_twist.angular.z = 0
+            else:
+                self.is_turning = True
+                my_twist.angular.z = self.angle_error
+
             self.pub.publish(my_twist)
             r.sleep()
 
