@@ -4,6 +4,7 @@
     to read handwritten digits. """
 
 import rospy
+import rospkg
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
@@ -32,7 +33,8 @@ class DigitReader(object):
         rospy.init_node('digit_reader')
 
         # Load machine learning model
-        self.model = joblib.load('model/model.pkl')
+        path = rospkg.RosPack().get_path('TextRecognition')
+        self.model = joblib.load('{}/model/model.pkl'.format(path))
 
         # Bridge to convert ROS messages to OpenCV
         self.bridge = CvBridge()
