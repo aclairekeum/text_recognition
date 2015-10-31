@@ -33,7 +33,7 @@ class DigitReader(object):
         rospy.init_node('digit_reader')
 
         # Load machine learning model
-        path = rospkg.RosPack().get_path('TextRecognition')
+        path = rospkg.RosPack().get_path('text_recognition')
         self.model = joblib.load('{}/model/model.pkl'.format(path))
 
         # Bridge to convert ROS messages to OpenCV
