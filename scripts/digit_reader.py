@@ -26,7 +26,7 @@ def pose_to_yaw(p):
     return euler_from_quaternion(orientation_tuple)[2]
 
 class DigitReader(object):
-    """ placeholder """
+    """ Node for reading signs with digits on them and turning to the corresponding position """
 
     def __init__(self, image_topic):
         """ Initialize """
@@ -89,7 +89,7 @@ class DigitReader(object):
                 continue
             # Order vertices as top-left, top-right, bottom-right, bottom-left
             pts = approx.reshape(4, 2)
-            rect = np.zeros((4, 2), dtype = "float32")
+            rect = np.zeros((4, 2), dtype = 'float32')
             center = pts.mean(axis = 0)
             try:
                 rect[:2] = sorted([pt for pt in pts if pt[1] < center[1]], key = lambda p: p[0])
@@ -118,7 +118,7 @@ class DigitReader(object):
                         [sq_side - 1, sq_side - 1],
                         [0, sq_side - 1]
                     ],
-                    dtype = "float32"
+                    dtype = 'float32'
                 )
                 break
 
@@ -157,14 +157,14 @@ class DigitReader(object):
             digit = self.model.predict(data)[0]
         self.last_digits.append(digit)
 
-        # Show guess on the stream image ####untested
+        # Show guess on the stream image
         cv2.putText(gray_image, str(digit), (10,60), cv2.FONT_HERSHEY_SIMPLEX, 2, 0, 2)
 
         # Show the stream and final extracted images
         # The stream will have a white contour drawn on it showing the extracted square
         # (or not if no square was found) and the predicted digit in the top left corner
-        cv2.imshow("stream", gray_image)
-        cv2.imshow("final", thresholded)
+        cv2.imshow('stream', gray_image)
+        cv2.imshow('final', thresholded)
         cv2.waitKey(1)
 
     def process_odom(self, msg):
