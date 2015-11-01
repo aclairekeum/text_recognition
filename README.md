@@ -9,7 +9,7 @@ We've built a ROS Package that uses the Neato's camera to detect signs containin
 
 
 ## Design
-A design decision we had to make was how to deal with noise. The model will predict a digit for whatever the Neato sees, even if there is not a sign present, so we needed to filter the predictions in some way. The first thing that we did was check the probability that the model assigned to its prediction and only accept it if it was over 50% confident. We also added a sliding window of 5 frames and only used the predictions if they all agreed for those frames. Together, these measures were very successful at making it so that the Neato would only act when it was actually reading a sign.
+A design decision we had to make was how to deal with noise. The model will predict a digit for whatever the Neato extracts as a sign from what it sees, even if there is not actually a sign present, so we needed to filter the predictions in some way. The first thing that we did was check the probability that the model assigned to its prediction and only accept it if the confidence was over 50%. We also added a sliding window of 5 frames and only used the predictions if they all agreed for those frames. Together, these measures were very successful at making it so that the Neato would only act when it was actually reading a sign.
 
 ## Software Architecture
 
@@ -19,5 +19,6 @@ One challenge that took us far too long to notice was our image data not matchin
 
 ## Future Work
 
+
 ## Lessons
-A lesson we learned is that you should always know what the dataset you use looks like. What dimensions are the images? Are they flattened into 1D arrays? What are the intensity values? This is important to know because you must get the data you want your model to make a prediction about into the same format of the data the model was trained on in order to get good results.
+A lesson we learned is that you should always know what the dataset you use looks like. What dimensions are the images? Are they flattened into 1D arrays? What are the intensity values? Is it dark foreground on light background or vice-versa? This is important to know because you must get the data you want your model to make a prediction about into the same format of the data the model was trained on in order to get good results.
