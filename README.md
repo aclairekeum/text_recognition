@@ -1,7 +1,7 @@
 # Optical Character Recognition (OCR)
 Computational Robotics, Fall 2015, Computer Vision Project
 
-We've built a ROS Package that uses the Neato's camera to detect signs containing a character, such as a digit from 0 to 9 or a letters, and a machine learning model to predict what the character is.
+We've built a ROS Package that uses the Neato's camera to detect signs containing a character, such as a digit from 0 to 9 or a letter, and a machine learning model to predict what the character is.
 
 [Here](http://) You can find a video of our project.
 
