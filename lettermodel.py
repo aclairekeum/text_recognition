@@ -9,9 +9,9 @@ from sklearn.externals import joblib
 import glob
 import os
 import numpy as np
-# from extractLetters import Letterdata
+
 def dump_model(model):
-    files = glob.glob('lettermodel/*')  # Clear out the old files in model/
+    files = glob.glob('lettermodel/*')  # Clear out the old files in lettermodel/
     for f in files:
         os.remove(f)
     joblib.dump(model, 'lettermodel/lettermodel.pkl')  # Dump model
@@ -26,24 +26,19 @@ def support_vector_machine():
     return GridSearchCV(SVC(C=1), tuned_parameters, cv=5, n_jobs=-1)
 
 def k_nearest_neighbors():
-    tuned_parameters = [{'weights': ['uniform'], 'n_neighbors': range(5,11)},
-                        {'weights': ['distance'], 'n_neighbors': range(5,11)}]
+    tuned_parameters = [{'weights': ['uniform'], 'n_neighbors': range(3,11)},
+                        {'weights': ['distance'], 'n_neighbors': range(3,11)}]
     return GridSearchCV(KNeighborsClassifier(), tuned_parameters, cv=5, n_jobs=-1)
 
 def random_forest():
     tuned_parameters = [{'n_estimators': range(5, 25, 2)}]
     return GridSearchCV(RandomForestClassifier(), tuned_parameters, cv=5, n_jobs=-1)
 
-# data = load_digits()
-# import pprint, pickle
-
-# pkl_file = open("letter/letter.pkl", 'rb')
-
-# data = pickle.load(pkl_file)
-
-data = joblib.load("letter2/letter.pkl")
-print data[0].shape, data[1].shape
-X_train, X_test, y_train, y_test = train_test_split(data[0], data[1], train_size=0.9)
+data = joblib.load("letter/letter.pkl")
+# Fix so that this works on Jacob's computer too
+if not isinstance(data[0], np.ndarray):
+    data[0] = np.load("letter/"+data[0].filename)
+    data[1] = np.load("letter/"+data[1].filename)
 
 # model = logistic_regression()
 # model = support_vector_machine()
@@ -55,7 +50,5 @@ model.fit(data[0], data[1])
 
 print model.best_estimator_
 print model.score(data[0], data[1])
-print model.score(X_train, y_train)
-print model.score(X_test, y_test)
 
 dump_model(model)
