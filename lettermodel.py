@@ -45,7 +45,6 @@ if not isinstance(data[0], np.ndarray):
 model = k_nearest_neighbors()
 # model = random_forest()
 
-# # model.fit(X_train, y_train)
 model.fit(data[0], data[1])
 
 print model.best_estimator_
