@@ -16,7 +16,7 @@ Another design decision we made was to limit where the sign is written by having
 ## Software Architecture
 
 A diagram below shows a software architecture of the system.
-![software_architecture](compvision_system.png "software architecture of the project.")
+![software_architecture](compvision_system.jpg "software architecture of the project.")
 
 Our system divides up to two major part. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function and 
 
