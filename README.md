@@ -55,7 +55,7 @@ As you can see in the figures, we started with the three letters, F, L, and R ea
 <img src="images/writeup/L.png" width="250">
 <img src="images/writeup/R.png" width="250">
 
-However, due to a limited time and having a hard time finding an accessible handwritten dataset, we could not make a lot of progress on the letter recognition. So we would be interested in using both letter and digit datasets to create a system and expanding the letters so that the neato can recognize all 26 characters with decent accuracy.
+However, due to limited time and having a hard time finding an accessible handwritten dataset, we could not make a lot of progress on the letter recognition. So we would be interested in using both letter and digit datasets to create a system and expanding the letters so that the neato can recognize all 26 characters with decent accuracy.
 
 ## Lessons
 A lesson we learned is that you should always know what the dataset you use looks like. What dimensions are the images? Are they flattened into 1D arrays? What are the intensity values? Is it dark foreground on light background or vice-versa? This is important to know because you must get the data you want your model to make a prediction about into the same format of the data the model was trained on in order to get good results.
