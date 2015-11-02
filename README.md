@@ -6,19 +6,24 @@ We've built a ROS Package that uses the Neato's camera to detect signs containin
 [Here](http://) You can find a video of our project.
 
 ## System 
-The system consists of handwritten signs and a neato. Neato will recognize a sign and extract a part of the sign within a square box. The extracted part will go through image processing, and 
+The system consists of handwritten signs and a neato. Neato will recognize a sign and extract a part of the sign within a square box. The extracted part will go through image processing, and the processed image will be put into a model that will give us a probability of how likely an image represents a certain number by comparing the features stored in the model. Once the whole image processing and guessing process is done, neato will change its behavior in a certain way. The video above shows one of the examples, where the neato turns in position to a number, similar to a clock, but with digits of zero to nine. 
 
 ## Design
 A design decision we had to make was how to deal with noise. The model will predict a digit for whatever the Neato extracts as a sign from what it sees, even if there is not actually a sign present, so we needed to filter the predictions in some way. The first thing that we did was check the probability that the model assigned to its prediction and only accept it if the confidence was over 50%. We also added a sliding window of 5 frames and only used the predictions if they all agreed for those frames. Together, these measures were very successful at making it so that the Neato would only act when it was actually reading a sign.
 
 Another design decision we made was to limit where the sign is written by having a square box of a certain size. From the experimental data, we have found out that the digits should be drawn with a certain thinkness to increase a similarity with the train dataset, which will maximize the probability of a certain feature. 
 
-## Software Architecture
+### Choosing a model
+One of the goals of this project was to learn about machine learning how feature extraction and model creation works. Scikit-learn was our main source of learning and we were able to use the model and dataset that the library supports. During our experimental phase, we have tested out the data prediction with four different models: K Nearest Neighbors, Support Vector Machine(SVM), and Logistic Regression, and we ended up using K nearest Neighbors to predict the sign. Here is what we have learned about K Nearest Neighbors. 
 
+**K Nearest Neighbors**
+
+
+## Software Architecture
 A diagram below shows a software architecture of the system.
 ![software_architecture](compvision_system.jpg "software architecture of the project.")
 
-Our system divides up to two major part. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function and 
+Our system divides up to two major part. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its part in the diagram is self-explanatory. With the created model and a procssed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
 
 ## Challenges
 One challenge that took us far too long to notice was our image data not matching our training data. In the MNIST handwritten digits dataset that comes with scikit-learn, the grayscale intensities were integers ranging from 0 to 16. On the other hand, the grayscale images we were getting from the camera had integer intensities ranging from 0 to 255, so we had to rescale our image data to be like the data our model was trained on.
