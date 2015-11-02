@@ -46,8 +46,10 @@ Our system divides up into two major parts. Model creation, and image processing
 ## Challenges
 One challenge that took us far too long to notice was our image data not matching our training data. In the MNIST handwritten digits dataset that comes with scikit-learn, the grayscale intensities were integers ranging from 0 to 16. On the other hand, the grayscale images we were getting from the camera had integer intensities ranging from 0 to 255, so we had to rescale our image data to be like the data our model was trained on.
 
+Another challenge was finding a handwritten letter dataset, though we were able to find image files for each alphabet letters in various fonts which we read in, converted to arrays, and created a somewhat-successful model from. This part will be further explained in the following section.
+
 ## Future Work
-We tried implementing the letter recognition as well once we were confident with the digits recognition. As you can see in the figures, we started with the three letters (F, L, and R) each representing forward, left, and right. The system that we were interested in was to combine the letter recognition and digit recognition to change the Neato's behavior, for example, F5 will make the Neato go straight with a linear speed of 0.5 times a constant and etc. 		
+We tried implementing the letter recognition as well once we were confident with the digits recognition. As you can see in the figures, we started with the three letters (F, L, and R for forward, left, and right) which worked fairly well. The system that we were interested in was to combine the letter recognition and digit recognition to change the Neato's behavior, for example, F5 will make the Neato go straight with a linear speed of 0.5 times a constant and etc. 		
 
 <img src="images/writeup/F.png" width="250">		
 <img src="images/writeup/L.png" width="250">		
