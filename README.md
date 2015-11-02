@@ -17,14 +17,26 @@ A design decision we had to make was how to deal with noise. The model will pred
 Another design decision we made was to limit where the sign is written by having a square box of a certain size. From the experimental data, we have found out that the digits should be drawn with a certain thinkness to increase a similarity with the train dataset, which will maximize the probability of a certain feature. 
 
 ### Choosing a model
-One of the goals of this project was to learn about machine learning how feature extraction and model creation works. Scikit-learn was our main source of learning and we were able to use the model and dataset that the library supports. During our experimental phase, we have tested out the data prediction with four different models: K Nearest Neighbors, Support Vector Machine(SVM), and Logistic Regression, and we ended up using K Nearest Neighbors to predict the sign. Here is what we have learned about K Nearest Neighbors. 
 
-**K Nearest Neighbors**
+One of the goals of this project was to learn about machine learning since neither of us had used it before. To this end, we utilized scikit-learn and the models and datasets that the library supports. During our experimental phase, we tested out the data prediction with four different models: Logistic Regression, Support Vector Machine, Random Forest, and *k*-Nearest Neighbors. We ended up using the *k*-Nearest Neighbors model as it was relatively easy to understand and performing the best in our experiments.
 
+
+#### *k*-Nearest Neighbors (*k*-NN)
+The <a href="https://en.wikipedia.org/wiki/K-nearest_neighbors_algorithm" target="_blank">*k*-NN algorithm</a> works by finding the *k* training data points closest to the test data. The classification of the test data is made based on which category (in our case, which character) these neighbors fall into.
+
+![k-NN](https://upload.wikimedia.org/wikipedia/commons/e/e7/KnnClassification.svg "k-NN visualization.")
+
+Image from Wikipedia.
+
+In the image above, the green circle (the test data) would be classified as a red triangle for *k* = 3 but a blue square for *k* = 5 if each neighbor is weighted equally. Sometimes the neighbors are weighted relative to their distance from the test data, in which case it would be possible for the green circle to be classified as a red triangle even for *k* = 5.
+
+In our implementation, we used scikit-learn's `KNeighborsClassifier` with `GridSearchCV` to sweep over different parameters such as the value of *k* and the weighting method.
 
 ## Software Architecture
 A diagram below shows a software architecture of the system.
+
 ![software_architecture](compvision_system.png "software architecture of the project.")
+
 
 Our system divides up to two major part. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its part in the diagram is self-explanatory. With the created model and a procssed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
 
