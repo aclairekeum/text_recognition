@@ -1,6 +1,9 @@
 # Optical Character Recognition (OCR)
 Computational Robotics, Fall 2015, Computer Vision Project
 
+![neatomove](neatomove.png =250x380 "picture of neato")
+![neatomove](neatomove2.png =250x380 "picture of neato")
+
 We've built a ROS Package that uses the Neato's camera to detect signs containing a character, such as a digit from 0 to 9 or a letter, and a machine learning model to predict what the character is.
 
 <a href="https://www.youtube.com/watch?v=1gujZN9T9l8" target="_blank">Here</a> you can find a video of our project in action.
@@ -14,14 +17,14 @@ A design decision we had to make was how to deal with noise. The model will pred
 Another design decision we made was to limit where the sign is written by having a square box of a certain size. From the experimental data, we have found out that the digits should be drawn with a certain thinkness to increase a similarity with the train dataset, which will maximize the probability of a certain feature. 
 
 ### Choosing a model
-One of the goals of this project was to learn about machine learning how feature extraction and model creation works. Scikit-learn was our main source of learning and we were able to use the model and dataset that the library supports. During our experimental phase, we have tested out the data prediction with four different models: K Nearest Neighbors, Support Vector Machine(SVM), and Logistic Regression, and we ended up using K nearest Neighbors to predict the sign. Here is what we have learned about K Nearest Neighbors. 
+One of the goals of this project was to learn about machine learning how feature extraction and model creation works. Scikit-learn was our main source of learning and we were able to use the model and dataset that the library supports. During our experimental phase, we have tested out the data prediction with four different models: K Nearest Neighbors, Support Vector Machine(SVM), and Logistic Regression, and we ended up using K Nearest Neighbors to predict the sign. Here is what we have learned about K Nearest Neighbors. 
 
 **K Nearest Neighbors**
 
 
 ## Software Architecture
 A diagram below shows a software architecture of the system.
-![software_architecture](compvision_system.jpg "software architecture of the project.")
+![software_architecture](compvision_system.png "software architecture of the project.")
 
 Our system divides up to two major part. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its part in the diagram is self-explanatory. With the created model and a procssed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
 
