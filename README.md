@@ -1,6 +1,6 @@
 # Optical Character Recognition (OCR)
 Computational Robotics, Fall 2015, Computer Vision Project
-
+<img src="neatomove.PNG" width="48">
 ![neatomove](neatomove.PNG "picture of neato")
 ![neatomove](neatomove2.PNG "picture of neato")
 
