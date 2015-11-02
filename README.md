@@ -43,10 +43,19 @@ Our system divides up into two major parts. Model creation, and image processing
 ![image_processing](images/writeup/image_processing.png "image processing flow")
 
 ## Challenges
-One challenge that took us far too long to notice was our image data not matching our training data. In the MNIST handwritten digits dataset that comes with scikit-learn, the grayscale intensities were integers ranging from 0 to 16. On the other hand, the grayscale images we were getting from the camera had integer intensities ranging from 0 to 255, so we had to rescale our image data to be like the data our model was trained on.
+One challenge that took us far too long to notice was our image data not matching our training data. In the MNIST handwritten digits dataset that comes with scikit-learn, the grayscale intensities were integers ranging from 0 to 16. On the other hand, the grayscale images we were getting from the camera had integer intensities ranging from 0 to 255, so we had to rescale our image data to be like the data our model was trained on. 
+
+The other challenge was that finding a handwritten letter dataset, though we were able to find image files for each alphabet letters, converted into a matrices, and created a model. This part will be further explained in the following section. 
 
 ## Future Work
-One of the future work that we are interested in is to have a system that incorporates both digits and letter, such that letter tells the neato to move left, right or go staight, and digits set the speed of a certain behavior. 
+We tried implementing the letter recognition as well once we were confident with the digits recognition. 
+As you can see in the figures, we started with the three letters, F, L, and R each representing forward, left, and right. The system that we were interested in was to combine the letter recognition and digit recognition to change the neato's behavior, for example, F-5 will make neato go straight with a linear speed of 0.5*constant and etc. 
+
+![F](images/writeup/F.png "letter F")
+![L](images/writeup/L.png "letter L")
+![R](images/writeup/R.png "letter R")
+
+However, due to a limited time and having a hard time finding a accessible handwritten dataset, we could not make a lot of progress on the letter recognition. So we would be interested in using both letter and digit datasets to create a system and expanding the letters so that the neato can recognize all 26 characters with decent accuracy.
 
 ## Lessons
 A lesson we learned is that you should always know what the dataset you use looks like. What dimensions are the images? Are they flattened into 1D arrays? What are the intensity values? Is it dark foreground on light background or vice-versa? This is important to know because you must get the data you want your model to make a prediction about into the same format of the data the model was trained on in order to get good results.
