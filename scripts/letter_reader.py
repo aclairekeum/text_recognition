@@ -1,73 +1,45 @@
 #!/usr/bin/env python
 
 """ This is a script that uses computer vision and a machine learning model
-    to read handwritten digits. """
+    to read letters. """
 
 import rospy
+import rospkg
 from sensor_msgs.msg import Image
-from geometry_msgs.msg import Twist
-from nav_msgs.msg import Odometry
-from tf.transformations import euler_from_quaternion
 from cv_bridge import CvBridge
 import cv2
-import math
 import numpy as np
 from collections import deque
 from sklearn.externals import joblib
 
-def angle_normalize(z):
-    """ convenience function to map an angle to the range [-pi,pi] """
-    return math.atan2(math.sin(z), math.cos(z))
-
-def pose_to_yaw(p):
-    """ convenience function to extract yaw from a pose """
-    orientation_tuple = (p.orientation.x, p.orientation.y, p.orientation.z, p.orientation.w)
-    return euler_from_quaternion(orientation_tuple)[2]
-
-class DigitReader(object):
-    """ placeholder """
+class LetterReader(object):
+    """ Node for reading signs with letters (F, L, or R) on them """
 
     def __init__(self, image_topic):
         """ Initialize """
-        rospy.init_node('digit_reader')
+        rospy.init_node('letter_reader')
 
         # Load machine learning model
-        self.model = joblib.load('lettermodel/lettermodel.pkl')
+        path = rospkg.RosPack().get_path('text_recognition')
+        self.model = joblib.load('{}/lettermodel/lettermodel.pkl'.format(path))
+        self.target_letters = 'FLR' # key for the targets
 
         # Bridge to convert ROS messages to OpenCV
         self.bridge = CvBridge()
 
-        # To filter out noise when there is not a digit in the frame,
+        # To filter out noise when there is not a letter in the frame,
         # we only accept predictions when the confidence is high enough.
-        self.min_digit_confidence = 0.6
+        self.min_letter_confidence = 0.6
 
         # We also use a sliding window and only accept the prediction when there is agreement
         self.max_len = 5
-        self.last_digits = deque([-1], maxlen=self.max_len)
+        self.last_letters = deque([-1], maxlen=self.max_len)
 
-        # Target angle, error from current angle, allowed error, and list of set points
-        self.target_angle = 0
-        self.angle_error = 0
-        self.max_error = 0.075
-        self.angles = [angle_normalize(-i*np.pi/5) for i in range(10)]
-
-        # Proportional control constant
-        self.k_p = 0.5
-
-        # Flag so we can toggle between reading and turning
-        self.is_turning = False
-
-        # Subscribe to the image topic and create a cmd_vel publisher
+        # Subscribe to the image topic
         rospy.Subscriber(image_topic, Image, self.process_image)
-        rospy.Subscriber('/odom', Odometry, self.process_odom)
-        self.pub = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def process_image(self, msg):
         """ Process image messages from ROS """
-        # Short circuit if we're turning right now
-        if self.is_turning:
-            return
-
         # Receive grayscale image
         gray_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='mono8')
 
@@ -87,7 +59,7 @@ class DigitReader(object):
                 continue
             # Order vertices as top-left, top-right, bottom-right, bottom-left
             pts = approx.reshape(4, 2)
-            rect = np.zeros((4, 2), dtype = "float32")
+            rect = np.zeros((4, 2), dtype = 'float32')
             center = pts.mean(axis = 0)
             try:
                 rect[:2] = sorted([pt for pt in pts if pt[1] < center[1]], key = lambda p: p[0])
@@ -116,7 +88,7 @@ class DigitReader(object):
                         [sq_side - 1, sq_side - 1],
                         [0, sq_side - 1]
                     ],
-                    dtype = "float32"
+                    dtype = 'float32'
                 )
                 break
 
@@ -142,56 +114,39 @@ class DigitReader(object):
         # Resize to match standard size
         resized = cv2.resize(thresholded, (8, 8))
 
-        # Use model to evaluate the highest confidence in digit prediction
-        # Flatten image, divide by 16, and round to integers to match training data
-        data = resized.ravel() #/ 16.0
-        data.round()
-        self.digit_confidence = self.model.predict_proba(data).max()
+        # Use model to evaluate the highest confidence in letter prediction
+        # Flatten image to match training data
+        data = resized.ravel()
+        self.letter_confidence = self.model.predict_proba(data).max()
         print  self.model.predict_proba(data)
         # Only accept the prediction if it has a high enough confidence; use -1 if not
         # Push the result to the deque of the last N results
-        digit = -1
-        if self.digit_confidence > self.min_digit_confidence:
-            digit = self.model.predict(data)[0]
-        letters = 'FLR'
-        self.last_digits.append(digit)
+        letter = -1
+        if self.letter_confidence > self.min_letter_confidence:
+            letter = self.model.predict(data)[0]
 
-        # Show guess on the stream image ####untested
-        cv2.putText(gray_image, str(letters[int(digit)]), (10,60), cv2.FONT_HERSHEY_SIMPLEX, 2, 0, 2)
+        self.last_letters.append(letter)
+
+        # Show guess on the stream image
+        cv2.putText(gray_image, self.target_letters[int(letter)], (10,60), cv2.FONT_HERSHEY_SIMPLEX, 2, 0, 2)
 
         # Show the stream and final extracted images
         # The stream will have a white contour drawn on it showing the extracted square
-        # (or not if no square was found) and the predicted digit in the top left corner
-        cv2.imshow("stream", gray_image)
-        cv2.imshow("final", thresholded)
+        # (or not if no square was found) and the predicted letter in the top left corner
+        cv2.imshow('stream', gray_image)
+        cv2.imshow('final', thresholded)
         cv2.waitKey(1)
 
-    def process_odom(self, msg):
-        """ Process odometry messages to find error between current and target angles """
-        current_angle = pose_to_yaw(msg.pose.pose)
-        self.angle_error = angle_normalize(self.target_angle - current_angle)
-
     def run(self):
-        """ The main run loop, publish twist messages """
+        """ The main run loop, print letters """
         r = rospy.Rate(5)
-        my_twist = Twist()
         while not rospy.is_shutdown():
-            # If the last N digits were the same, accept that digit as correct and set target angle accordingly
-            digit = self.last_digits[-1]
-            if digit != -1 and self.last_digits.count(digit) == self.max_len:
-                self.target_angle = self.angles[int(digit)]
-                print digit
-            # Set turning flag and angular velocity based on error from target angle
-            # if abs(self.angle_error) < self.max_error:
-            #     self.is_turning = False
-            #     my_twist.angular.z = 0
-            # else:
-            #     self.is_turning = True
-            #     my_twist.angular.z = self.k_p * self.angle_error
-
-            # self.pub.publish(my_twist)
+            # If the last N letters were the same, accept that letter as correct
+            letter = self.last_letters[-1]
+            if letter != -1 and self.last_letters.count(letter) == self.max_len:
+                print self.target_letters[int(letter)]
             r.sleep()
 
 if __name__ == '__main__':
-    node = DigitReader('/camera/image_raw')
+    node = LetterReader('/camera/image_raw')
     node.run()
