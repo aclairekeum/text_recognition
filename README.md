@@ -14,10 +14,10 @@ A design decision we had to make was how to deal with noise. The model will pred
 Another design decision we made was to limit where the sign is written by having a square box of a certain size. From the experimental data, we have found out that the digits should be drawn with a certain thinkness to increase a similarity with the train dataset, which will maximize the probability of a certain feature. 
 
 ### Choosing a model
-One of the goals of this project was to learn about machine learning how feature extraction and model creation works. Scikit-learn was our main source of learning and we were able to use the model and dataset that the library supports. During our experimental phase, we have tested out the data prediction with four different models: K Nearest Neighbors, Support Vector Machine(SVM), and Logistic Regression, and we ended up using K nearest Neighbors to predict the sign. Here is what we have learned about K Nearest Neighbors. 
+One of the goals of this project was to learn about machine learning since neither of us had used it before. To this end, we utilized scikit-learn and the models and datasets that the library supports. During our experimental phase, we tested out the data prediction with four different models: Logistic Regression, Support Vector Machine, Random Forest, and *k*-Nearest Neighbors. We ended up using the *k*-Nearest Neighbors model as it was relatively easy to understand and performing the best in our experiments.
 
-**K Nearest Neighbors**
-
+#### *k*-Nearest Neighbors (*k*-NN)
+The <a href="https://en.wikipedia.org/wiki/k-nearest_neighbors_algorithm" target="_blank">*k*-NN algorithm</a> works by finding the *k* training data points closest to the test data. The classification of the test data is made based on which category (in our case, which digit) these neighbors fall into.
 
 ## Software Architecture
 A diagram below shows a software architecture of the system.
