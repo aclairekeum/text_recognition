@@ -39,7 +39,9 @@ A diagram below shows a software architecture of the system.
 
 ![software_architecture](images/writeup/compvision_system.jpg "software architecture of the project.")
 
-Our system divides up into two major parts. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its steps are shown in the image below. With the created model and a procssed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
+Our system divides up into two major parts. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its steps are shown in the image below. With the created model and a processed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
+
+As our main goal of the project was to learn about Machine Learning rather than doing image processing, we used an online source to extract a rectangle from a raw image and unwarp the perspective. 
 
 ![image_processing](images/writeup/image_processing.png "image processing flow")
 
