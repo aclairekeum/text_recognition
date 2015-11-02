@@ -1,8 +1,8 @@
 # Optical Character Recognition (OCR)
 Computational Robotics, Fall 2015, Computer Vision Project
 
-<img src="neatomove.PNG" width="250">
-<img src="neatomove2.PNG" width="250">
+<img src="images/writeup/neatomove.PNG" width="250">
+<img src="images/writeup/neatomove2.PNG" width="250">
 <Setting of our experiment>
 
 We've built a ROS Package that uses the Neato's camera to detect signs containing a character, such as a digit from 0 to 9 or a letter, and a machine learning model to predict what the character is.
@@ -36,10 +36,11 @@ In our implementation, we used scikit-learn's `KNeighborsClassifier` with `GridS
 ## Software Architecture
 A diagram below shows a software architecture of the system.
 
-![software_architecture](compvision_system.png "software architecture of the project.")
+![software_architecture](images/writeup/compvision_system.jpg "software architecture of the project.")
 
+Our system divides up into two major parts. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its steps are shown in the image below. With the created model and a procssed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
 
-Our system divides up into two major parts. Model creation, and image processing. Model creation is where we collect dataset, use it to create a model and save the model. Image processing happens in the main function, and its part in the diagram is self-explanatory. With the created model and a procssed image, the program will give us a list of probabilities of how likely the processed image represents a certain number and the final output shows us the best guess over the past five frames.
+![image_processing](images/writeup/image_processing.png "image processing flow")
 
 ## Challenges
 One challenge that took us far too long to notice was our image data not matching our training data. In the MNIST handwritten digits dataset that comes with scikit-learn, the grayscale intensities were integers ranging from 0 to 16. On the other hand, the grayscale images we were getting from the camera had integer intensities ranging from 0 to 255, so we had to rescale our image data to be like the data our model was trained on.
