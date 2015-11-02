@@ -51,9 +51,9 @@ The other challenge was that finding a handwritten letter dataset, though we wer
 We tried implementing the letter recognition as well once we were confident with the digits recognition. 
 As you can see in the figures, we started with the three letters, F, L, and R each representing forward, left, and right. The system that we were interested in was to combine the letter recognition and digit recognition to change the neato's behavior, for example, F-5 will make neato go straight with a linear speed of 0.5*constant and etc. 
 
-![F](images/writeup/F.png "letter F")
-![L](images/writeup/L.png "letter L")
-![R](images/writeup/R.png "letter R")
+<img src="images/writeup/F.png" width="250">
+<img src="images/writeup/L.png" width="250">
+<img src="images/writeup/R.png" width="250">
 
 However, due to a limited time and having a hard time finding a accessible handwritten dataset, we could not make a lot of progress on the letter recognition. So we would be interested in using both letter and digit datasets to create a system and expanding the letters so that the neato can recognize all 26 characters with decent accuracy.
 
